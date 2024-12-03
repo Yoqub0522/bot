@@ -1,0 +1,60 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from dotenv import load_dotenv
+import os
+
+# .env faylini yuklash
+load_dotenv()
+
+# Bot tokenini .env faylidan olish
+TOKEN = os.getenv("BOT_TOKEN")
+
+# Admin ID (adminni o'zingizning ID raqamingizga o'zgartiring)
+ADMIN_ID = 858267509
+
+# Admin tugmalari va xabarlar
+admin_buttons = [
+    [InlineKeyboardButton("Xabar 1", callback_data="message_1")],
+    [InlineKeyboardButton("Xabar 2", callback_data="message_2")]
+]
+
+# Tugmalarni yaratish funktsiyasi
+def start(update: Update, context: CallbackContext) -> None:
+    user_id = update.message.from_user.id
+
+    # Faqat admin uchun tugmalar
+    if user_id == ADMIN_ID:
+        keyboard = InlineKeyboardMarkup(admin_buttons)
+        update.message.reply_text("Admin paneli:", reply_markup=keyboard)
+    else:
+        update.message.reply_text("Siz admin emassiz!")
+
+# Callback uchun funksiya (tugmaga bosilganda)
+def button(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    # Callback ma'lumotlariga qarab xabar yuborish
+    if query.data == "message_1":
+        query.edit_message_text("Bu Xabar 1.")
+    elif query.data == "message_2":
+        query.edit_message_text("Bu Xabar 2.")
+
+def main() -> None:
+    # Botni ishga tushirish
+    updater = Updater(TOKEN)
+
+    dispatcher = updater.dispatcher
+
+    # Start komandasini ishlashini ta'minlash
+    dispatcher.add_handler(CommandHandler("start", start))
+
+    # Tugmaga bosilganda ishlaydigan handler
+    dispatcher.add_handler(CallbackQueryHandler(button))
+
+    # Botni ishga tushirish
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
